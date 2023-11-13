@@ -1,5 +1,6 @@
 # RedisDemo
 
+Simple demo on redis caching for .NET web apps (Blazor)
 
 ## Steps:
 1. run redis server `docker run -d --name redis-server -p 6379:6379 redis`
