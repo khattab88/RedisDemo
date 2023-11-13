@@ -1,6 +1,10 @@
 ﻿@page "/fetchdata"
+
 @using BlazorApp.Data
+@using BlazorApp.Extensions
+
 @inject WeatherForecastService ForecastService
+@inject IDistributedCache Cache
 
 <PageTitle>Weather forecast</PageTitle>
 
@@ -8,12 +12,20 @@
 
 <p>This component demonstrates fetching data from a service.</p>
 
-@if (forecasts == null)
+<button class="btn btn-primary" @onclick="LoadForecasts">Load Forecasts</button>
+
+@if(forecasts is null && loadLocation is "")
+{
+    <p><em>Press the button to load the forecast</em></p>
+}
+else if (forecasts is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
+    <div class="h3 @isCacheData">@loadLocation</div>
+
     <table class="table">
         <thead>
             <tr>
@@ -40,8 +52,36 @@ else
 @code {
     private WeatherForecast[]? forecasts;
 
-    protected override async Task OnInitializedAsync()
+    private string loadLocation = "";
+    private string isCacheData = "";
+
+    private async Task LoadForecasts()
     {
-        forecasts = await ForecastService.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now));
+        forecasts = null;
+        loadLocation = null;
+
+        string recordKey = "WeatherForecast_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+
+        forecasts = await Cache.GetRecordAsync<WeatherForecast[]>(recordKey);
+
+        if(forecasts is null)
+        {
+            forecasts = await ForecastService.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now));
+
+            loadLocation = $"Loaded from API at {DateTime.Now}";
+            isCacheData = "";
+
+            await Cache.SetRecordAsync(recordKey, forecasts);
+        }
+        else
+        {
+            loadLocation = $"Loaded from the cache at {DateTime.Now}";
+            isCacheData = "text-danger";
+        }
     }
+
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    forecasts = await ForecastService.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now));
+    //}
 }
