@@ -15,6 +15,12 @@ namespace BlazorApp
             builder.Services.AddServerSideBlazor();
             builder.Services.AddSingleton<WeatherForecastService>();
 
+            builder.Services.AddStackExchangeRedisCache(options => 
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                options.InstanceName = "RedisDemo_";
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
